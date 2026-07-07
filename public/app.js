@@ -55,7 +55,10 @@ let currentMax = 1;
 let hoveredLayer = null;
 
 function clearHover() {
-  if (gridLayer) gridLayer.resetStyle(); // resets every cell, not just one
+  if (gridLayer) {
+    gridLayer.resetStyle(); // resets every cell, not just one
+    gridLayer.eachLayer((layer) => layer.closeTooltip());
+  }
   hoveredLayer = null;
 }
 
@@ -119,16 +122,20 @@ async function loadMonth(month) {
       layer.on("mouseover", () => {
         // Panning/zooming can slide cells under a stationary cursor, which
         // fires mouseover without a matching mouseout on the previous cell
-        // (the mouse itself never "moved"). Explicitly reset whatever was
-        // hovered before, rather than relying only on that cell's own
-        // mouseout, so highlights never get orphaned.
-        if (hoveredLayer && hoveredLayer !== layer) gridLayer.resetStyle(hoveredLayer);
+        // (the mouse itself never "moved"). Explicitly reset/close whatever
+        // was hovered before, rather than relying only on that cell's own
+        // mouseout, so highlights and tooltips never get orphaned.
+        if (hoveredLayer && hoveredLayer !== layer) {
+          gridLayer.resetStyle(hoveredLayer);
+          hoveredLayer.closeTooltip();
+        }
         hoveredLayer = layer;
         layer.setStyle({ color: "#0b0b0b", weight: 1.5 });
         layer.bringToFront();
       });
       layer.on("mouseout", () => {
         gridLayer.resetStyle(layer);
+        layer.closeTooltip();
         if (hoveredLayer === layer) hoveredLayer = null;
       });
     },
