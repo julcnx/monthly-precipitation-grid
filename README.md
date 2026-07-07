@@ -4,6 +4,8 @@ A coarse, offline, global monthly precipitation-climatology dataset: a
 2.5&deg; grid x 12 calendar months, shipped as a small portable SQLite file,
 plus a reference lookup service and a map demo.
 
+![The demo's world view: a sqrt-scaled blue choropleth of July precipitation, with a month slider, dataset stat chips, and collapsible API docs in the sidebar](docs/images/world-view.png)
+
 > **Status: proof of concept.** This repo demonstrates the dataset, the
 > data model, and the API shape a router would want. There's no hosted
 > instance and no plan to run one, the `server/` and `public/` demo are
@@ -190,6 +192,8 @@ regardless of route length, not one per segment. Note the bbox is a
 rectangle, a diagonal route's bbox can include a corner cell the path
 never actually passes through, harmless for costing (you just look up a
 cell your edge isn't in) but worth knowing if you're counting cells.
+
+![The demo showing this exact fallback: a Chiang Rai to Bangkok route drawn over the grid, with the 6 cells its bbox spans outlined in red](docs/images/route-bbox.png)
 
 What doesn't make sense: a query per segment (network latency x hundreds of
 edges, for data that changes monthly, not per-request), or downloading the
