@@ -106,6 +106,9 @@ async function loadMonth(month) {
       layer.on("mouseover", () => {
         cellInfo.textContent = `Cell ${feature.properties.cell_id}: ${feature.properties.precip_mm_month.toFixed(0)} mm/month (${MONTH_NAMES[month - 1]})`;
       });
+      layer.on("mouseout", () => {
+        cellInfo.textContent = "Hover a cell to see its monthly value.";
+      });
     },
   }).addTo(map);
 }
@@ -114,6 +117,32 @@ monthInput.addEventListener("input", () => loadMonth(Number(monthInput.value)));
 monthInput.value = new Date().getMonth() + 1;
 loadMonth(Number(monthInput.value));
 
+// --- Play through months ---
+
+const playButton = document.getElementById("play-month");
+let playTimer = null;
+
+function stopPlaying() {
+  clearInterval(playTimer);
+  playTimer = null;
+  playButton.textContent = "▶"; // ▶
+  playButton.setAttribute("aria-label", "Play through months");
+}
+
+playButton.addEventListener("click", () => {
+  if (playTimer) {
+    stopPlaying();
+    return;
+  }
+  playButton.textContent = "⏹"; // ⏹
+  playButton.setAttribute("aria-label", "Stop");
+  playTimer = setInterval(() => {
+    const next = (Number(monthInput.value) % 12) + 1; // wraps Dec (12) -> Jan (1)
+    monthInput.value = next;
+    loadMonth(next);
+  }, 1000);
+});
+
 // --- Routing demo (calls a public Valhalla instance by default) ---
 
 let pointA = null;
@@ -121,6 +150,7 @@ let pointB = null;
 let markerA = null;
 let markerB = null;
 let routeLayer = null;
+let routeBboxLayer = null;
 
 function decodePolyline6(str) {
   let index = 0, lat = 0, lon = 0;
@@ -148,6 +178,21 @@ function decodePolyline6(str) {
   return coords;
 }
 
+// Highlights the grid cells a route's bbox actually touches, using the same
+// /api/cells?bbox= endpoint a router would call once per route (see the
+// README's "Integration guide for routers"), not a demo-only shortcut.
+async function highlightRouteCells(summary) {
+  if (routeBboxLayer) map.removeLayer(routeBboxLayer);
+  const bbox = [summary.min_lon, summary.min_lat, summary.max_lon, summary.max_lat].join(",");
+  const res = await fetch(`/api/cells?month=${monthInput.value}&bbox=${bbox}`);
+  const geojson = await res.json();
+  routeBboxLayer = L.geoJSON(geojson, {
+    style: { fillOpacity: 0, color: "#e34948", weight: 2.5 },
+    interactive: false,
+  }).addTo(map);
+  return geojson.features.length;
+}
+
 async function requestRoute() {
   routeStatus.textContent = "Requesting route from Valhalla…";
   const params = new URLSearchParams({
@@ -166,7 +211,8 @@ async function requestRoute() {
     if (routeLayer) map.removeLayer(routeLayer);
     routeLayer = L.polyline(coords, { color: "#2a78d6", weight: 4 }).addTo(map);
     map.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
-    routeStatus.textContent = `Route: ${(data.trip.summary.length).toFixed(1)} km`;
+    const cellCount = await highlightRouteCells(data.trip.summary);
+    routeStatus.textContent = `Route: ${data.trip.summary.length.toFixed(1)} km, touches ${cellCount} grid cell${cellCount === 1 ? "" : "s"}`;
   } catch (err) {
     routeStatus.textContent = `Could not reach Valhalla: ${err.message}`;
   }
@@ -177,6 +223,7 @@ map.on("click", (e) => {
     if (markerA) map.removeLayer(markerA);
     if (markerB) map.removeLayer(markerB);
     if (routeLayer) map.removeLayer(routeLayer);
+    if (routeBboxLayer) map.removeLayer(routeBboxLayer);
     pointA = e.latlng;
     pointB = null;
     markerA = L.marker(pointA).addTo(map).bindTooltip("A", { permanent: true });
@@ -194,5 +241,6 @@ document.getElementById("clear-route").addEventListener("click", () => {
   if (markerA) map.removeLayer(markerA);
   if (markerB) map.removeLayer(markerB);
   if (routeLayer) map.removeLayer(routeLayer);
+  if (routeBboxLayer) map.removeLayer(routeBboxLayer);
   routeStatus.textContent = "Click map to pick start point.";
 });

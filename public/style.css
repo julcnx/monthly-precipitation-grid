@@ -72,6 +72,22 @@ input[type="range"] {
   accent-color: var(--accent);
 }
 
+#month-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#month-row input[type="range"] {
+  flex: 1;
+}
+
+#play-month {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  line-height: 1;
+}
+
 #month-label {
   font-size: 14px;
   font-weight: 600;
