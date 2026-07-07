@@ -35,6 +35,15 @@ const cellsStmt = db.prepare(
    FROM cells c LEFT JOIN monthly_precip p ON p.cell_id = c.id AND p.month = ?`
 );
 
+// For a single route (or any small region), a caller only needs the handful
+// of cells its bbox actually touches, not the whole globe, so a batch
+// lookup for a route stays a single fast request regardless of route length.
+const cellsBboxStmt = db.prepare(
+  `SELECT c.id, c.lat_min, c.lat_max, c.lon_min, c.lon_max, p.precip_mm_day, p.precip_mm_month
+   FROM cells c LEFT JOIN monthly_precip p ON p.cell_id = c.id AND p.month = ?
+   WHERE c.lon_max > ? AND c.lon_min < ? AND c.lat_max > ? AND c.lat_min < ?`
+);
+
 // Fixed across all months (not recomputed per-request) so the color scale is
 // directly comparable as you move the month slider: per-month maxes range
 // from ~430 to ~784 mm, autoscaling each month to its own max would make a
@@ -69,7 +78,19 @@ app.get("/api/precip", (req, res) => {
 
 app.get("/api/cells", (req, res) => {
   const month = Number(req.query.month) || 1;
-  const rows = cellsStmt.all(month);
+
+  let rows;
+  if (req.query.bbox) {
+    const parts = String(req.query.bbox).split(",").map(Number);
+    if (parts.length !== 4 || parts.some((n) => !Number.isFinite(n))) {
+      return res.status(400).json({ error: "bbox must be minLon,minLat,maxLon,maxLat" });
+    }
+    const [minLon, minLat, maxLon, maxLat] = parts;
+    rows = cellsBboxStmt.all(month, minLon, maxLon, minLat, maxLat);
+  } else {
+    rows = cellsStmt.all(month);
+  }
+
   const features = rows
     .filter((r) => r.precip_mm_month !== null)
     .map((r) => ({

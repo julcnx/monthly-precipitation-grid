@@ -134,9 +134,44 @@ cell_id = row * 144 + col
 ### HTTP API (`server/server.js`)
 
 - `GET /api/precip?lat=&lon=&month=` -> `{ precip_mm_month, precip_mm_day, valid_yr_count, cell_id, bbox, ... }`
-- `GET /api/cells?month=` -> GeoJSON FeatureCollection of all grid cells for that month
+- `GET /api/cells?month=&bbox=minLon,minLat,maxLon,maxLat` -> GeoJSON FeatureCollection
+  of grid cells for that month, optionally restricted to a bounding box (omit `bbox` for
+  the whole globe)
 - `GET /api/route?lat1=&lon1=&lat2=&lon2=&costing=` -> proxies to Valhalla's
   `/route` (public demo instance by default, see below), used only by the demo page
+
+## Integration guide for routers
+
+The question this dataset exists to answer: **how should a router actually
+consume this**, given a route can have hundreds of edges and you don't want
+hundreds of lookups per route?
+
+**Preferred: bake it into the graph at build time, query nothing at request
+time.** The dataset is tiny (5MB) and cell lookup is O(1) arithmetic (see
+"compute the cell id directly" above), no spatial index, no network call,
+no service to depend on. A router's tile/graph-building stage already walks
+every edge once, that's the place to look up each edge's home cell (against
+a local copy of `precip_grid.sqlite`, or an even smaller array embedded
+directly in code) and write the 12 monthly values, or a precomputed seasonal
+penalty, onto the edge as a graph attribute. Routing then costs an edge using
+data already sitting on it, the same way it already knows the edge's
+`surface` tag: no per-segment lookups, no per-route lookups, nothing to
+query, ever. Unlike live traffic, this doesn't need a runtime channel at
+all, a monthly climatology is static for weeks, so it only needs to be
+refreshed on the router's normal tile-rebuild cadence.
+
+**Fallback: batch by bounding box, once per route, if embedding the file
+isn't an option.** Don't query per-segment. A route's shape, however many
+edges it has, only touches a handful of 2.5&deg; cells (a Chiang Rai to
+Bangkok route, ~700km, touches 6). Request `/api/cells?month=&bbox=` once
+with the route's bounding box, match each edge's midpoint to a returned
+cell locally with the same O(1) arithmetic, done. One request per route
+regardless of route length, not one per segment.
+
+What doesn't make sense: a query per segment (network latency x hundreds of
+edges, for data that changes monthly, not per-request), or downloading the
+whole 10,368-cell dataset repeatedly per route when a bbox slice returns
+the 4-10 cells that actually matter.
 
 ### The routing demo
 
