@@ -23,8 +23,18 @@ function lerpColor(a, b, t) {
   return `rgb(${r},${g},${bl})`;
 }
 
-function colorForValue(value, max) {
+// Precipitation is right-skewed: a handful of tropical monsoon cells sit far
+// above the rest of the globe. Normalizing linearly against the monthly max
+// crushes every temperate value (Europe, most of the US, etc.) into the
+// bottom ~15% of the range, which reads as "no rain" year-round. A sqrt
+// scale keeps the tropics clearly highest while giving low/mid values (most
+// of the planet, most of the year) real visual separation.
+function normalize(value, max) {
   const t = Math.max(0, Math.min(1, value / max));
+  return Math.sqrt(t);
+}
+
+function colorForT(t) {
   const scaled = t * (RAMP.length - 1);
   const i = Math.floor(scaled);
   const frac = scaled - i;
@@ -49,10 +59,25 @@ const cellInfo = document.getElementById("cell-info");
 const routeStatus = document.getElementById("route-status");
 
 function renderLegend(max) {
-  const gradientCss = `linear-gradient(to right, ${RAMP.join(",")})`;
+  // Sample colorForT across the *value* domain (not evenly in t) so the
+  // gradient bar shows the same sqrt compression the cells are rendered
+  // with, rather than a plain linear ramp that would misrepresent it.
+  const stops = [];
+  const steps = 20;
+  for (let i = 0; i <= steps; i++) {
+    const value = (i / steps) * max;
+    const pct = (i / steps) * 100;
+    stops.push(`${colorForT(normalize(value, max))} ${pct}%`);
+  }
   legend.innerHTML = `
-    <div class="gradient" style="background:${gradientCss}"></div>
-    <div class="ticks"><span>0 mm/day</span><span>${max.toFixed(1)} mm/day</span></div>
+    <div class="gradient" style="background:linear-gradient(to right, ${stops.join(",")})"></div>
+    <div class="ticks">
+      <span>0</span>
+      <span>${(max * 0.25).toFixed(1)}</span>
+      <span>${(max * 0.5).toFixed(1)}</span>
+      <span>${(max * 0.75).toFixed(1)}</span>
+      <span>${max.toFixed(1)} mm/day</span>
+    </div>
   `;
 }
 
@@ -70,11 +95,11 @@ async function loadMonth(month) {
   if (gridLayer) map.removeLayer(gridLayer);
   gridLayer = L.geoJSON(geojson, {
     style: (feature) => {
-      const t = Math.max(0, Math.min(1, feature.properties.precip_mm_day / currentMax));
+      const t = normalize(feature.properties.precip_mm_day, currentMax);
       return {
-        fillColor: colorForValue(feature.properties.precip_mm_day, currentMax),
-        fillOpacity: 0.12 + 0.6 * t,
-        color: "#00000022",
+        fillColor: colorForT(t),
+        fillOpacity: 0.25 + 0.7 * t,
+        color: "#00000030",
         weight: 0.5,
       };
     },
