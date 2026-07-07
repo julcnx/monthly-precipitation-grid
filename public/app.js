@@ -43,6 +43,7 @@ function colorForT(t) {
 }
 
 const map = L.map("map", { worldCopyJump: true }).setView([15, 20], 2);
+map.attributionControl.setPrefix(false); // drop Leaflet's own branding, keep tile attribution below
 L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
   attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
   subdomains: "abcd",
