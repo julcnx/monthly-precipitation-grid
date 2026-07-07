@@ -170,11 +170,14 @@ refreshed on the router's normal tile-rebuild cadence.
 
 **Fallback: batch by bounding box, once per route, if embedding the file
 isn't an option.** Don't query per-segment. A route's shape, however many
-edges it has, only touches a handful of 2.5&deg; cells (a Chiang Rai to
-Bangkok route, ~700km, touches 6). Request `/api/cells?month=&bbox=` once
+edges it has, only spans a handful of 2.5&deg; cells (a Chiang Rai to
+Bangkok route, ~700km, spans 6). Request `/api/cells?month=&bbox=` once
 with the route's bounding box, match each edge's midpoint to a returned
 cell locally with the same O(1) arithmetic, done. One request per route
-regardless of route length, not one per segment.
+regardless of route length, not one per segment. Note the bbox is a
+rectangle, a diagonal route's bbox can include a corner cell the path
+never actually passes through, harmless for costing (you just look up a
+cell your edge isn't in) but worth knowing if you're counting cells.
 
 What doesn't make sense: a query per segment (network latency x hundreds of
 edges, for data that changes monthly, not per-request), or downloading the

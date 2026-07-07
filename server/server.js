@@ -36,8 +36,8 @@ const cellsStmt = db.prepare(
 );
 
 // For a single route (or any small region), a caller only needs the handful
-// of cells its bbox actually touches, not the whole globe, so a batch
-// lookup for a route stays a single fast request regardless of route length.
+// of cells within its bbox, not the whole globe, so a batch lookup for a
+// route stays a single fast request regardless of route length.
 const cellsBboxStmt = db.prepare(
   `SELECT c.id, c.lat_min, c.lat_max, c.lon_min, c.lon_max, p.precip_mm_day, p.precip_mm_month
    FROM cells c LEFT JOIN monthly_precip p ON p.cell_id = c.id AND p.month = ?

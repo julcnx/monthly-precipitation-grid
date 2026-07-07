@@ -143,3 +143,47 @@ button {
   color: var(--text-secondary);
   line-height: 1.5;
 }
+
+#api-docs {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+
+#api-docs summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+#api-docs dl {
+  margin: 12px 0 0;
+}
+
+#api-docs dt code {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+#api-docs dd {
+  margin: 4px 0 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+#api-docs dd code {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 11px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 5px;
+  word-break: break-all;
+}
+
+#api-docs a {
+  color: var(--accent);
+}

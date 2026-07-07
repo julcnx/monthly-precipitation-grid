@@ -32,6 +32,23 @@
     </div>
 
     <div id="cell-info">Hover a cell to see its monthly value.</div>
+
+    <details id="api-docs">
+      <summary>API</summary>
+      <dl>
+        <dt><code>GET /api/precip?lat=&amp;lon=&amp;month=</code></dt>
+        <dd>Value for one point.<br /><code>curl 'localhost:3000/api/precip?lat=19.9&amp;lon=99.8&amp;month=8'</code></dd>
+
+        <dt><code>GET /api/cells?month=&amp;bbox=</code></dt>
+        <dd>GeoJSON grid, whole globe or one bbox (<code>minLon,minLat,maxLon,maxLat</code>).<br /><code>curl 'localhost:3000/api/cells?month=8&amp;bbox=98,13,101,20'</code></dd>
+
+        <dt><code>GET /api/route?lat1=&amp;lon1=&amp;lat2=&amp;lon2=</code></dt>
+        <dd>Proxies to Valhalla, powers this page's route demo only.</dd>
+      </dl>
+      <p class="hint">Full integration guidance (bake into the graph at
+        build time vs. bbox fallback) is in the
+        <a href="https://github.com/julcnx/monthly-precipitation-grid#integration-guide-for-routers" target="_blank" rel="noopener">README</a>.</p>
+    </details>
   </div>
   <div id="map"></div>
 </div>

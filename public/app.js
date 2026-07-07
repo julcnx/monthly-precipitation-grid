@@ -179,9 +179,12 @@ function decodePolyline6(str) {
   return coords;
 }
 
-// Highlights the grid cells a route's bbox actually touches, using the same
+// Highlights the grid cells within a route's bounding box, using the same
 // /api/cells?bbox= endpoint a router would call once per route (see the
 // README's "Integration guide for routers"), not a demo-only shortcut.
+// Note: this is the bbox's cells, not necessarily every cell the route
+// polyline itself crosses, a diagonal route's rectangular bbox can include
+// corner cells the path never actually passes through.
 async function highlightRouteCells(summary) {
   if (routeBboxLayer) map.removeLayer(routeBboxLayer);
   const bbox = [summary.min_lon, summary.min_lat, summary.max_lon, summary.max_lat].join(",");
@@ -213,7 +216,7 @@ async function requestRoute() {
     routeLayer = L.polyline(coords, { color: "#2a78d6", weight: 4 }).addTo(map);
     map.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
     const cellCount = await highlightRouteCells(data.trip.summary);
-    routeStatus.textContent = `Route: ${data.trip.summary.length.toFixed(1)} km, touches ${cellCount} grid cell${cellCount === 1 ? "" : "s"}`;
+    routeStatus.textContent = `Route: ${data.trip.summary.length.toFixed(1)} km, spans ${cellCount} grid cell${cellCount === 1 ? "" : "s"}`;
   } catch (err) {
     routeStatus.textContent = `Could not reach Valhalla: ${err.message}`;
   }
