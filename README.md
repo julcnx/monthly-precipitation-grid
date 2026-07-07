@@ -24,8 +24,9 @@ not something bundled into this repo.
 - **`scripts/build_grid.py`** builds `data/precip_grid.sqlite` from source
   climate data. Re-run any time to regenerate the database from scratch.
 - **`data/precip_grid.sqlite`** the dataset itself: one row per grid cell,
-  one row per cell per month. Portable, tiny (~5MB), queryable from any
-  language with a SQLite driver, no server required.
+  one row per cell per month (10,368 cells x 12 months). Portable, tiny
+  (**5.0MB**), queryable from any language with a SQLite driver, no server
+  required.
 - **`server/`** a minimal Node/Express service that wraps the SQLite file
   with an HTTP API, plus a `/api/route` proxy used only by the demo page.
 - **`public/`** a static demo page: a Leaflet map showing the grid, a month
