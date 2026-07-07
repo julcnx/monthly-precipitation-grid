@@ -12,6 +12,18 @@ plus a reference lookup service and a map demo.
 > guide for routers" below (embed the SQLite file at build time), not
 > expect an endpoint to call.
 
+## Dataset at a glance
+
+| | |
+|---|---|
+| Format | SQLite (2 tables: `cells`, `monthly_precip`) |
+| File size | 6.1MB |
+| Grid | 2.5&deg; x 2.5&deg;, 72 rows x 144 cols = 10,368 cells |
+| Time coverage | 12 calendar months (climatological normals, not a time series) |
+| Rows | 124,416 (10,368 cells x 12 months) |
+| Baseline period | 1991-2020 |
+| Source | NOAA PSL CMAP (public domain) |
+
 ## Motivation
 
 This started from a discussion in
@@ -33,8 +45,8 @@ not something bundled into this repo.
   climate data. Re-run any time to regenerate the database from scratch.
 - **`data/precip_grid.sqlite`** the dataset itself: one row per grid cell,
   one row per cell per month (10,368 cells x 12 months). Portable, tiny
-  (**5.0MB**), queryable from any language with a SQLite driver, no server
-  required.
+  (**6.1MB**), queryable from any language with a SQLite driver, no server
+  required. See "Dataset at a glance" below for the full breakdown.
 - **`server/`** a minimal Node/Express service that wraps the SQLite file
   with an HTTP API, plus a `/api/route` proxy used only by the demo page.
 - **`public/`** a static demo page: a Leaflet map showing the grid, a month
@@ -155,7 +167,7 @@ consume this**, given a route can have hundreds of edges and you don't want
 hundreds of lookups per route?
 
 **Preferred: bake it into the graph at build time, query nothing at request
-time.** The dataset is tiny (5MB) and cell lookup is O(1) arithmetic (see
+time.** The dataset is tiny (6MB) and cell lookup is O(1) arithmetic (see
 "compute the cell id directly" above), no spatial index, no network call,
 no service to depend on. A router's tile/graph-building stage already walks
 every edge once, that's the place to look up each edge's home cell (against
