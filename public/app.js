@@ -106,9 +106,12 @@ async function loadMonth(month) {
     onEachFeature: (feature, layer) => {
       layer.on("mouseover", () => {
         cellInfo.textContent = `Cell ${feature.properties.cell_id}: ${feature.properties.precip_mm_month.toFixed(0)} mm/month (${MONTH_NAMES[month - 1]})`;
+        layer.setStyle({ color: "#0b0b0b", weight: 2.5 });
+        layer.bringToFront();
       });
       layer.on("mouseout", () => {
         cellInfo.textContent = "Hover a cell to see its monthly value.";
+        gridLayer.resetStyle(layer);
       });
     },
   }).addTo(map);
