@@ -59,8 +59,13 @@ Two other datasets were considered and rejected for this project specifically:
 
 ### What's in each row
 
-- `precip_mm_day`: the climatological mean precipitation rate for that cell
-  and month.
+- `precip_mm_month`: total precipitation for that calendar month (the
+  climatological daily rate x the number of days in that month, using
+  standard non-leap calendar lengths). This is the primary value, and what
+  the API and demo map use.
+- `precip_mm_day`: CMAP's native unit, the climatological mean daily
+  precipitation rate, kept alongside the total in case a rate is more useful
+  than a monthly sum for a given consumer.
 - `valid_yr_count`: how many years of the 1991-2020 baseline actually had
   valid input data for that cell/month, a confidence signal. Cells with a
   low count (sparse gauge/satellite coverage, often in the same undermapped
@@ -109,8 +114,8 @@ npm start
 No server needed, query the SQLite file with any client:
 
 ```sql
--- find the cell for a lat/lon, then its August precipitation
-SELECT c.id, m.precip_mm_day, m.valid_yr_count
+-- find the cell for a lat/lon, then its August total precipitation
+SELECT c.id, m.precip_mm_month, m.precip_mm_day, m.valid_yr_count
 FROM cells c
 JOIN monthly_precip m ON m.cell_id = c.id
 WHERE c.lat_min <= 19.9 AND c.lat_max > 19.9
@@ -128,7 +133,7 @@ cell_id = row * 144 + col
 
 ### HTTP API (`server/server.js`)
 
-- `GET /api/precip?lat=&lon=&month=` -> `{ precip_mm_day, valid_yr_count, cell_id, bbox, ... }`
+- `GET /api/precip?lat=&lon=&month=` -> `{ precip_mm_month, precip_mm_day, valid_yr_count, cell_id, bbox, ... }`
 - `GET /api/cells?month=` -> GeoJSON FeatureCollection of all grid cells for that month
 - `GET /api/route?lat1=&lon1=&lat2=&lon2=&costing=` -> proxies to Valhalla's
   `/route` (public demo instance by default, see below), used only by the demo page

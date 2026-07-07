@@ -24,6 +24,10 @@ SOURCE_URL = "https://downloads.psl.noaa.gov/Datasets/cmap/enh/precip.mon.ltm.nc
 RAW_DIR = Path(__file__).resolve().parent.parent / "data" / "raw"
 RAW_FILE = RAW_DIR / "precip.mon.ltm.nc"
 
+# Standard (non-leap) calendar day counts, used to turn CMAP's native
+# mm/day rate into total monthly precipitation.
+DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
 
 def download_source() -> Path:
     RAW_DIR.mkdir(parents=True, exist_ok=True)
@@ -76,6 +80,7 @@ def build(out_path: Path) -> None:
             cell_id INTEGER NOT NULL REFERENCES cells(id),
             month INTEGER NOT NULL CHECK (month BETWEEN 1 AND 12),
             precip_mm_day REAL,
+            precip_mm_month REAL,
             valid_yr_count INTEGER,
             PRIMARY KEY (cell_id, month)
         )
@@ -111,21 +116,27 @@ def build(out_path: Path) -> None:
                 if value == missing or not np.isfinite(value):
                     continue
                 precip_rows.append(
-                    (cell_id, month + 1, float(value), int(valid_yr_count[month, row, col]))
+                    (
+                        cell_id,
+                        month + 1,
+                        float(value),
+                        float(value) * DAYS_IN_MONTH[month],
+                        int(valid_yr_count[month, row, col]),
+                    )
                 )
 
     conn.executemany(
         "INSERT INTO cells VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", cell_rows
     )
     conn.executemany(
-        "INSERT INTO monthly_precip VALUES (?, ?, ?, ?)", precip_rows
+        "INSERT INTO monthly_precip VALUES (?, ?, ?, ?, ?)", precip_rows
     )
     conn.executemany(
         "INSERT INTO meta VALUES (?, ?)",
         [
             ("source", "NOAA PSL CMAP long-term monthly climatology (public domain)"),
             ("source_url", "https://psl.noaa.gov/data/gridded/data.cmap.html"),
-            ("units", "mm/day"),
+            ("units", "precip_mm_day is a daily rate; precip_mm_month is the total for that calendar month (rate x days in month, non-leap)"),
             ("cell_size_deg", str(cell_size)),
             ("grid_shape", f"{n_lat}x{n_lon}"),
             ("climatology_period", climo_period),

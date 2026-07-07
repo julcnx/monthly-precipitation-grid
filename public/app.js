@@ -73,10 +73,10 @@ function renderLegend(max) {
     <div class="gradient" style="background:linear-gradient(to right, ${stops.join(",")})"></div>
     <div class="ticks">
       <span>0</span>
-      <span>${(max * 0.25).toFixed(1)}</span>
-      <span>${(max * 0.5).toFixed(1)}</span>
-      <span>${(max * 0.75).toFixed(1)}</span>
-      <span>${max.toFixed(1)} mm/day</span>
+      <span>${(max * 0.25).toFixed(0)}</span>
+      <span>${(max * 0.5).toFixed(0)}</span>
+      <span>${(max * 0.75).toFixed(0)}</span>
+      <span>${max.toFixed(0)} mm/month</span>
     </div>
   `;
 }
@@ -87,7 +87,7 @@ async function loadMonth(month) {
   const geojson = await res.json();
 
   currentMax = geojson.features.reduce(
-    (m, f) => Math.max(m, f.properties.precip_mm_day || 0),
+    (m, f) => Math.max(m, f.properties.precip_mm_month || 0),
     0.001
   );
   renderLegend(currentMax);
@@ -95,7 +95,7 @@ async function loadMonth(month) {
   if (gridLayer) map.removeLayer(gridLayer);
   gridLayer = L.geoJSON(geojson, {
     style: (feature) => {
-      const t = normalize(feature.properties.precip_mm_day, currentMax);
+      const t = normalize(feature.properties.precip_mm_month, currentMax);
       return {
         fillColor: colorForT(t),
         fillOpacity: 0.25 + 0.7 * t,
@@ -105,7 +105,7 @@ async function loadMonth(month) {
     },
     onEachFeature: (feature, layer) => {
       layer.on("mouseover", () => {
-        cellInfo.textContent = `Cell ${feature.properties.cell_id}: ${feature.properties.precip_mm_day.toFixed(2)} mm/day (${MONTH_NAMES[month - 1]})`;
+        cellInfo.textContent = `Cell ${feature.properties.cell_id}: ${feature.properties.precip_mm_month.toFixed(0)} mm/month (${MONTH_NAMES[month - 1]})`;
       });
     },
   }).addTo(map);

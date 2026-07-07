@@ -25,13 +25,13 @@ function cellIdFor(lat, lon) {
 
 const precipStmt = db.prepare(
   `SELECT c.id, c.lat_center, c.lon_center, c.lat_min, c.lat_max, c.lon_min, c.lon_max,
-          p.precip_mm_day, p.valid_yr_count
+          p.precip_mm_day, p.precip_mm_month, p.valid_yr_count
    FROM cells c LEFT JOIN monthly_precip p ON p.cell_id = c.id AND p.month = ?
    WHERE c.id = ?`
 );
 
 const cellsStmt = db.prepare(
-  `SELECT c.id, c.lat_min, c.lat_max, c.lon_min, c.lon_max, p.precip_mm_day
+  `SELECT c.id, c.lat_min, c.lat_max, c.lon_min, c.lon_max, p.precip_mm_day, p.precip_mm_month
    FROM cells c LEFT JOIN monthly_precip p ON p.cell_id = c.id AND p.month = ?`
 );
 
@@ -53,6 +53,7 @@ app.get("/api/precip", (req, res) => {
     lon_center: row.lon_center,
     bbox: [row.lon_min, row.lat_min, row.lon_max, row.lat_max],
     month,
+    precip_mm_month: row.precip_mm_month,
     precip_mm_day: row.precip_mm_day,
     valid_yr_count: row.valid_yr_count,
   });
@@ -62,10 +63,10 @@ app.get("/api/cells", (req, res) => {
   const month = Number(req.query.month) || 1;
   const rows = cellsStmt.all(month);
   const features = rows
-    .filter((r) => r.precip_mm_day !== null)
+    .filter((r) => r.precip_mm_month !== null)
     .map((r) => ({
       type: "Feature",
-      properties: { cell_id: r.id, precip_mm_day: r.precip_mm_day },
+      properties: { cell_id: r.id, precip_mm_month: r.precip_mm_month, precip_mm_day: r.precip_mm_day },
       geometry: {
         type: "Polygon",
         coordinates: [
