@@ -1,0 +1,18 @@
+services:
+  valhalla:
+    image: ghcr.io/gis-ops/docker-valhalla/valhalla:latest
+    ports:
+      - "8002:8002"
+    volumes:
+      - valhalla-data:/custom_files
+    environment:
+      # Small extract by default so the graph builds in well under a minute.
+      # Swap for any Geofabrik .osm.pbf URL to route over a different region:
+      # https://download.geofabrik.de/
+      - tile_urls=https://download.geofabrik.de/europe/andorra-latest.osm.pbf
+      - build_elevation=False
+      - build_admins=False
+      - build_time_zones=False
+
+volumes:
+  valhalla-data:

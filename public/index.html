@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Monthly Precipitation Grid Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+  <div id="sidebar">
+    <h1>Monthly Precipitation Grid</h1>
+    <p class="hint">
+      Coarse 2.5&deg; monthly precipitation climatology (NOAA CMAP).
+      Click the map to set a route start (A) then end (B); routes are
+      requested from a public Valhalla instance (see README).
+    </p>
+
+    <label for="month">Month</label>
+    <input type="range" id="month" min="1" max="12" value="1" />
+    <div id="month-label">January</div>
+
+    <div id="legend"></div>
+
+    <div id="route-controls">
+      <button id="clear-route">Clear route</button>
+      <div id="route-status">Click map to pick start point.</div>
+    </div>
+
+    <div id="cell-info">Hover a cell to see its monthly value.</div>
+  </div>
+  <div id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
