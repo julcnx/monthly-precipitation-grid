@@ -57,13 +57,11 @@ let hoveredLayer = null;
 function clearHover() {
   if (gridLayer) gridLayer.resetStyle(); // resets every cell, not just one
   hoveredLayer = null;
-  cellInfo.textContent = "Hover a cell to see its monthly value.";
 }
 
 const monthInput = document.getElementById("month");
 const monthLabel = document.getElementById("month-label");
 const legend = document.getElementById("legend");
-const cellInfo = document.getElementById("cell-info");
 const routeStatus = document.getElementById("route-status");
 const clearRouteButton = document.getElementById("clear-route");
 
@@ -112,6 +110,12 @@ async function loadMonth(month) {
       };
     },
     onEachFeature: (feature, layer) => {
+      layer.bindTooltip(`${feature.properties.precip_mm_month.toFixed(0)} mm/month`, {
+        sticky: true, // follows the cursor rather than staying pinned to the cell centroid
+        direction: "bottom",
+        offset: [0, 10],
+        opacity: 0.95,
+      });
       layer.on("mouseover", () => {
         // Panning/zooming can slide cells under a stationary cursor, which
         // fires mouseover without a matching mouseout on the previous cell
@@ -120,14 +124,12 @@ async function loadMonth(month) {
         // mouseout, so highlights never get orphaned.
         if (hoveredLayer && hoveredLayer !== layer) gridLayer.resetStyle(hoveredLayer);
         hoveredLayer = layer;
-        cellInfo.textContent = `Cell ${feature.properties.cell_id}: ${feature.properties.precip_mm_month.toFixed(0)} mm/month (${MONTH_NAMES[month - 1]})`;
         layer.setStyle({ color: "#0b0b0b", weight: 1.5 });
         layer.bringToFront();
       });
       layer.on("mouseout", () => {
         gridLayer.resetStyle(layer);
         if (hoveredLayer === layer) hoveredLayer = null;
-        cellInfo.textContent = "Hover a cell to see its monthly value.";
       });
     },
   }).addTo(map);

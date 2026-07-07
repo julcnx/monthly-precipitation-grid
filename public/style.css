@@ -169,14 +169,6 @@ button {
   line-height: 1.4;
 }
 
-#cell-info {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.5;
-}
 
 #api-docs {
   margin-top: 20px;
