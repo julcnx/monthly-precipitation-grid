@@ -52,6 +52,13 @@ L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
 
 let gridLayer = null;
 let currentMax = 1;
+let hoveredLayer = null;
+
+function clearHover() {
+  if (gridLayer) gridLayer.resetStyle(); // resets every cell, not just one
+  hoveredLayer = null;
+  cellInfo.textContent = "Hover a cell to see its monthly value.";
+}
 
 const monthInput = document.getElementById("month");
 const monthLabel = document.getElementById("month-label");
@@ -105,13 +112,21 @@ async function loadMonth(month) {
     },
     onEachFeature: (feature, layer) => {
       layer.on("mouseover", () => {
+        // Panning/zooming can slide cells under a stationary cursor, which
+        // fires mouseover without a matching mouseout on the previous cell
+        // (the mouse itself never "moved"). Explicitly reset whatever was
+        // hovered before, rather than relying only on that cell's own
+        // mouseout, so highlights never get orphaned.
+        if (hoveredLayer && hoveredLayer !== layer) gridLayer.resetStyle(hoveredLayer);
+        hoveredLayer = layer;
         cellInfo.textContent = `Cell ${feature.properties.cell_id}: ${feature.properties.precip_mm_month.toFixed(0)} mm/month (${MONTH_NAMES[month - 1]})`;
-        layer.setStyle({ color: "#0b0b0b", weight: 2.5 });
+        layer.setStyle({ color: "#0b0b0b", weight: 1.5 });
         layer.bringToFront();
       });
       layer.on("mouseout", () => {
-        cellInfo.textContent = "Hover a cell to see its monthly value.";
         gridLayer.resetStyle(layer);
+        if (hoveredLayer === layer) hoveredLayer = null;
+        cellInfo.textContent = "Hover a cell to see its monthly value.";
       });
     },
   }).addTo(map);
@@ -224,6 +239,11 @@ async function requestRoute() {
     routeStatus.textContent = `Could not reach Valhalla: ${err.message}`;
   }
 }
+
+// Belt-and-suspenders: any pan or zoom clears every cell's hover style, so a
+// stuck highlight (see mouseover comment above) can never survive the next
+// map interaction even if the per-cell mouseout logic somehow missed it.
+map.on("movestart zoomstart", clearHover);
 
 map.on("click", (e) => {
   if (!pointA || (pointA && pointB)) {
