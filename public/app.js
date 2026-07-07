@@ -33,9 +33,10 @@ function colorForValue(value, max) {
 }
 
 const map = L.map("map", { worldCopyJump: true }).setView([15, 20], 2);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: "&copy; OpenStreetMap contributors",
-  maxZoom: 18,
+L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+  attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+  subdomains: "abcd",
+  maxZoom: 19,
 }).addTo(map);
 
 let gridLayer = null;
@@ -86,9 +87,10 @@ async function loadMonth(month) {
 }
 
 monthInput.addEventListener("input", () => loadMonth(Number(monthInput.value)));
+monthInput.value = new Date().getMonth() + 1;
 loadMonth(Number(monthInput.value));
 
-// --- Routing demo (requires a locally running Valhalla instance) ---
+// --- Routing demo (calls a public Valhalla instance by default) ---
 
 let pointA = null;
 let pointB = null;
