@@ -4,6 +4,14 @@ A coarse, offline, global monthly precipitation-climatology dataset: a
 2.5&deg; grid x 12 calendar months, shipped as a small portable SQLite file,
 plus a reference lookup service and a map demo.
 
+> **Status: proof of concept.** This repo demonstrates the dataset, the
+> data model, and the API shape a router would want. There's no hosted
+> instance and no plan to run one, the `server/` and `public/` demo are
+> meant to be cloned and run locally, not deployed as a live service.
+> Anyone wanting to actually consume this should follow the "Integration
+> guide for routers" below (embed the SQLite file at build time), not
+> expect an endpoint to call.
+
 ## Motivation
 
 This started from a discussion in
