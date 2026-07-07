@@ -65,6 +65,7 @@ const monthLabel = document.getElementById("month-label");
 const legend = document.getElementById("legend");
 const cellInfo = document.getElementById("cell-info");
 const routeStatus = document.getElementById("route-status");
+const clearRouteButton = document.getElementById("clear-route");
 
 function renderLegend(max) {
   // Sample colorForT across the *value* domain (not evenly in t) so the
@@ -255,6 +256,7 @@ map.on("click", (e) => {
     pointB = null;
     markerA = L.marker(pointA).addTo(map).bindTooltip("A", { permanent: true });
     routeStatus.textContent = "Click map to pick end point.";
+    clearRouteButton.hidden = false;
   } else {
     pointB = e.latlng;
     markerB = L.marker(pointB).addTo(map).bindTooltip("B", { permanent: true });
@@ -262,7 +264,7 @@ map.on("click", (e) => {
   }
 });
 
-document.getElementById("clear-route").addEventListener("click", () => {
+clearRouteButton.addEventListener("click", () => {
   pointA = null;
   pointB = null;
   if (markerA) map.removeLayer(markerA);
@@ -270,4 +272,5 @@ document.getElementById("clear-route").addEventListener("click", () => {
   if (routeLayer) map.removeLayer(routeLayer);
   if (routeBboxLayer) map.removeLayer(routeBboxLayer);
   routeStatus.textContent = "Click map to pick start point.";
+  clearRouteButton.hidden = true;
 });

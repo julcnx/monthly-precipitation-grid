@@ -134,6 +134,24 @@ input[type="range"] {
   border-top: 1px solid var(--border);
 }
 
+#route-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#route-header span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+#route-header button {
+  padding: 2px 8px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 button {
   font-size: 13px;
   padding: 6px 12px;
