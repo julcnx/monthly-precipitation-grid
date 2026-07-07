@@ -86,10 +86,9 @@ async function loadMonth(month) {
   const res = await fetch(`/api/cells?month=${month}`);
   const geojson = await res.json();
 
-  currentMax = geojson.features.reduce(
-    (m, f) => Math.max(m, f.properties.precip_mm_month || 0),
-    0.001
-  );
+  // Fixed across all months so color intensity is directly comparable as
+  // the slider moves, rather than autoscaling each month to its own max.
+  currentMax = geojson.global_max_precip_mm_month;
   renderLegend(currentMax);
 
   if (gridLayer) map.removeLayer(gridLayer);

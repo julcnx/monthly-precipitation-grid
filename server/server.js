@@ -35,6 +35,14 @@ const cellsStmt = db.prepare(
    FROM cells c LEFT JOIN monthly_precip p ON p.cell_id = c.id AND p.month = ?`
 );
 
+// Fixed across all months (not recomputed per-request) so the color scale is
+// directly comparable as you move the month slider: per-month maxes range
+// from ~430 to ~784 mm, autoscaling each month to its own max would make a
+// dry month look just as saturated as a wet one.
+const GLOBAL_MAX_PRECIP_MM_MONTH = db
+  .prepare("SELECT MAX(precip_mm_month) AS max FROM monthly_precip")
+  .get().max;
+
 const app = express();
 app.use(express.static(path.join(__dirname, "..", "public")));
 
@@ -80,7 +88,11 @@ app.get("/api/cells", (req, res) => {
         ],
       },
     }));
-  res.json({ type: "FeatureCollection", features });
+  res.json({
+    type: "FeatureCollection",
+    features,
+    global_max_precip_mm_month: GLOBAL_MAX_PRECIP_MM_MONTH,
+  });
 });
 
 app.get("/api/route", async (req, res) => {
