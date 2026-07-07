@@ -25,6 +25,7 @@ plus a reference lookup service and a map demo.
 | Rows | 124,416 (10,368 cells x 12 months) |
 | Baseline period | 1991-2020 |
 | Source | NOAA PSL CMAP (public domain) |
+| Download | [`precip_grid.sqlite`](https://raw.githubusercontent.com/julcnx/monthly-precipitation-grid/master/data/precip_grid.sqlite) (tracks `master`; clone the repo instead if you need a specific commit) |
 
 ## Motivation
 
@@ -78,6 +79,40 @@ Two other datasets were considered and rejected for this project specifically:
   (~350MB per monthly GeoTIFF, ~4GB total), which would need a full download
   and downsampling pipeline for no benefit, since the goal is a coarse grid
   anyway.
+
+### Schema
+
+```sql
+CREATE TABLE cells (
+    id INTEGER PRIMARY KEY,
+    row INTEGER NOT NULL,
+    col INTEGER NOT NULL,
+    lat_min REAL NOT NULL,
+    lat_max REAL NOT NULL,
+    lon_min REAL NOT NULL,
+    lon_max REAL NOT NULL,
+    lat_center REAL NOT NULL,
+    lon_center REAL NOT NULL
+);
+
+CREATE TABLE monthly_precip (
+    cell_id INTEGER NOT NULL REFERENCES cells(id),
+    month INTEGER NOT NULL CHECK (month BETWEEN 1 AND 12),
+    precip_mm_day REAL,
+    precip_mm_month REAL,
+    valid_yr_count INTEGER,
+    PRIMARY KEY (cell_id, month)
+);
+
+CREATE TABLE meta (
+    key TEXT PRIMARY KEY,
+    value TEXT
+); -- source, source_url, units, cell_size_deg, grid_shape, climatology_period
+```
+
+`id` on `cells` is the same `row * 144 + col` value computable directly (see
+"compute the cell id directly" below), stored rather than derived so a plain
+`JOIN` works without either side doing arithmetic.
 
 ### What's in each row
 
